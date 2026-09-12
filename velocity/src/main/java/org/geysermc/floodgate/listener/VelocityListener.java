@@ -68,6 +68,13 @@ public final class VelocityListener {
     private static final Field INITIAL_CONNECTION_DELEGATE;
     private static final Field CHANNEL;
     private static final Property DEFAULT_TEXTURE_PROPERTY;
+    /**
+     * Passed through Velocity forwarding so downstream custom backends can
+     * recognize a Floodgate player even when a linked account uses an ordinary
+     * Blessing Skin UUID and texture property.
+     */
+    // Velocity requires a non-null signature field even for an unsigned marker.
+    private static final Property XINTINGLEI_BEDROCK_MARKER = new Property("xintinglei:bedrock", "1", "");
 
     static {
         Class<?> initialConnection = getPrefixedClass("connection.client.InitialInboundConnection");
@@ -168,7 +175,7 @@ public final class VelocityListener {
             event.setGameProfile(new GameProfile(
                     player.getCorrectUniqueId(),
                     player.getCorrectUsername(),
-                    List.of(DEFAULT_TEXTURE_PROPERTY)
+                    List.of(DEFAULT_TEXTURE_PROPERTY, XINTINGLEI_BEDROCK_MARKER)
             ));
             continuation.resume();
             return;
@@ -185,7 +192,10 @@ public final class VelocityListener {
                     event.setGameProfile(new GameProfile(
                             player.getCorrectUniqueId(),
                             player.getCorrectUsername(),
-                            List.of(new Property("textures", skin.value(), skin.signature()))
+                            List.of(
+                                    new Property("textures", skin.value(), skin.signature()),
+                                    XINTINGLEI_BEDROCK_MARKER
+                            )
                     ));
                     continuation.resume();
                 });

@@ -1,0 +1,14 @@
+# Xintinglei identity service, reached only by the Velocity/Floodgate host.
+# Floodgate supplies {xuid}; browsers never submit an XUID.
+# Contract:
+# 404: no binding
+# 200: {"linked":true,"java_uuid":"...","java_username":"..."}
+bindingEndpoint: "https://skin.xintinglei.cn/api/xintinglei/floodgate/bindings/{xuid}"
+
+# Sent as: Authorization: Bearer <token>
+bearerToken: ""
+
+timeoutMillis: 3000
+cacheTtlSeconds: 30
+# Keep this at 0 (the default) so a player can reconnect immediately after consuming a code.
+negativeCacheTtlSeconds: 0

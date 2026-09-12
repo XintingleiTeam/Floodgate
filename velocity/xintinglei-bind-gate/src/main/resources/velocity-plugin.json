@@ -1,0 +1,9 @@
+{
+  "id": "xintinglei-bind-gate",
+  "name": "Xintinglei Bind Gate",
+  "version": "0.1.0",
+  "description": "Issues one-time Blessing Skin binding codes for unlinked Floodgate players.",
+  "authors": ["Xintinglei"],
+  "main": "cn.xintinglei.floodgate.bindgate.XintingleiBindGate",
+  "dependencies": [{"id": "floodgate", "optional": false}]
+}

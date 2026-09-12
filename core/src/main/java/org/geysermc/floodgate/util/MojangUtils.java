@@ -45,6 +45,14 @@ import org.geysermc.floodgate.util.HttpClient.HttpResponse;
 
 @Singleton
 public class MojangUtils {
+    /**
+     * Linked Floodgate players on this network use a Blessing Skin game profile. The
+     * site exposes the normal Yggdrasil session-server profile format, including a
+     * signed textures property when unsigned=false is supplied.
+     */
+    private static final String XINTINGLEI_PROFILE_WITH_PROPERTIES_URL =
+            "https://skin.xintinglei.cn/api/yggdrasil/sessionserver/session/minecraft/profile/%s?unsigned=false";
+
     private final Cache<UUID, SkinData> SKIN_CACHE = CacheBuilder.newBuilder()
             .expireAfterWrite(5, TimeUnit.MINUTES)
             .maximumSize(500)
@@ -66,23 +74,44 @@ public class MojangUtils {
     }
 
     private @NonNull SkinData fetchSkinFor(UUID playerId) {
-        HttpResponse<JsonObject> httpResponse = httpClient.get(
-                String.format(Constants.PROFILE_WITH_PROPERTIES_URL, playerId.toString()));
+        // Blessing Skin stores game UUIDs without hyphens, while Floodgate's
+        // LinkedPlayer API provides a java.util.UUID.
+        SkinData xintingleiSkin = fetchSkinFromProfile(String.format(
+                XINTINGLEI_PROFILE_WITH_PROPERTIES_URL,
+                playerId.toString().replace("-", "")));
+        if (xintingleiSkin != null) {
+            return xintingleiSkin;
+        }
+
+        // Keep the upstream lookup as a compatibility fallback. It also means a
+        // temporarily unavailable skin site never blocks a Bedrock login.
+        SkinData mojangSkin = fetchSkinFromProfile(String.format(
+                Constants.PROFILE_WITH_PROPERTIES_URL, playerId));
+        return mojangSkin != null ? mojangSkin : SkinDataImpl.DEFAULT_SKIN;
+    }
+
+    private SkinData fetchSkinFromProfile(String profileUrl) {
+        HttpResponse<JsonObject> httpResponse;
+        try {
+            httpResponse = httpClient.get(profileUrl);
+        } catch (RuntimeException exception) {
+            return null;
+        }
 
         if (httpResponse.getHttpCode() != 200) {
-            return SkinDataImpl.DEFAULT_SKIN;
+            return null;
         }
 
         JsonObject response = httpResponse.getResponse();
 
         if (response == null) {
-            return SkinDataImpl.DEFAULT_SKIN;
+            return null;
         }
 
         JsonArray properties = response.getAsJsonArray("properties");
 
-        if (properties.size() == 0) {
-            return SkinDataImpl.DEFAULT_SKIN;
+        if (properties == null || properties.size() == 0) {
+            return null;
         }
 
         for (JsonElement property : properties) {
@@ -105,6 +134,6 @@ public class MojangUtils {
             );
         }
 
-        return SkinDataImpl.DEFAULT_SKIN;
+        return null;
     }
 }

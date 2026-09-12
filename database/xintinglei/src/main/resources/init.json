@@ -1,0 +1,4 @@
+{
+  "mainClass": "cn.xintinglei.floodgate.link.XintingleiPlayerLink",
+  "config": "xintinglei.yml"
+}
